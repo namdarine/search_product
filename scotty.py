@@ -6,6 +6,7 @@ from openpyxl import load_workbook
 from openpyxl.utils import get_column_letter
 from function import get_API_key, find_file
 import os
+import subprocess
 
 
 key_file = './scotty.txt'
@@ -13,7 +14,9 @@ api_key_instance = get_API_key(key_file, 5)
 api_key = api_key_instance.get_api_key(5).strip()
 
 current_date = datetime.now().strftime("%Y-%m-%d")
-last_update_date = datetime.now() - timedelta(days=3)
+current_time = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.000Z")
+last_update_date = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%S.000Z")
+# print(last_update_date)
 
 url = "https://svcs.ebay.com/services/search/FindingService/v1"
 
@@ -30,10 +33,10 @@ page_number = 1
 while True:
     params = {
             "keywords": "scotty cameron",
-            "paginationInput.entriesPerPage": "100",
+            "paginationInput.entriesPerPage": "1",
             "paginationInput.pageNumber": str(page_number),
-            "itemFilter(0).name": "EndTimeFrom",  # 종료 시간 필터링
-            "itemFilter(0).value": last_update_date.strftime("%Y-%m-%dT%H:%M:%S.000Z")  # 마지막 업데이트 이후
+            "itemFilter(0).name": "StartTimeFrom",  # 특정 시간 이후에 올라온 항목
+            "itemFilter(0).value": last_update_date,
         }
 
     response = requests.get(url, headers=headers, params=params)
@@ -43,7 +46,6 @@ while True:
             items = data['findItemsByKeywordsResponse'][0]['searchResult'][0]['item']
             if not items:
                 break
-
             all_items.extend(items)
             page_number += 1
 
@@ -99,10 +101,11 @@ new_df = pd.DataFrame(product_list)
 new_df['Status'] = '새로 추가'
 
 latest_file = find_file.find_latest_file()
+latest_file = os.path.join('output', latest_file)
 if latest_file:
         existing_df = pd.read_excel(latest_file)
         # 'Newly Added' 상태 제거 (값을 빈 문자열로 변경)
-        existing_df['status'] = existing_df['status'].replace('Newly Added', '')
+        existing_df['Status'] = existing_df['Status'].replace('Newly Added', '')
 
 current_time = datetime.now()
 existing_df = existing_df[existing_df['경매 마감일'] >= current_time.strftime("%Y-%m-%d %H:%M:%S")]
@@ -148,6 +151,21 @@ for row in range(2, sheet.max_row + 1):  # 헤더는 제외하고 2번째 행부
 workbook.save(excel_file)
 
 
+updated_file = "output/Scotty Products_{current_date}.xlsx"
+json_file = "output/update_date.json"
 
+update_data = {
+    "updateDate": current_date
+}
+
+with open(json_file, 'w') as jsonf:
+    json.dump(update_data, jsonf)
+
+# 엑셀 파일 푸시하는 스크립트 예시
+subprocess.run(["git", "add", "."])
+#subprocess.run(["git", "add", updated_file])
+#subprocess.run(["git", "add", json_file])
+subprocess.run(["git", "commit", "-m", "Update Excel file and JSON with current date"])
+subprocess.run(["git", "push"])
 
 

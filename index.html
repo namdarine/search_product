@@ -6,7 +6,7 @@
     <title>My Excel Files</title>
 </head>
 <body>
-    <h1>최신 엑셀 파일 다운로드</h1>
+    <h1>엑셀 파일 다운로드</h1>
     <p id="downloadLink">파일 정보를 불러오는 중입니다...</p>
 
     <script>
@@ -18,7 +18,7 @@
                 const fileName = `Scotty Products_${updateDate}.xlsx`;
                 
                 // 다운로드 링크 설정
-                document.getElementById('downloadLink').innerHTML = `<a href="output/${fileName}" download>여기를 클릭하여 최신 엑셀 파일을 다운로드하세요</a>`;
+                document.getElementById('downloadLink').innerHTML = `<a href="output/${fileName}" download>여기를 클릭하여 파일 다운로드하세요</a>`;
             })
             .catch(error => {
                 console.error('파일 정보를 가져오는 데 오류가 발생했습니다:', error);

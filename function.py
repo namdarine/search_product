@@ -29,7 +29,7 @@ class find_file:
     def find_latest_file():
         output_dir = './output'
         files = os.listdir(output_dir)
-        excel_files = [f for f in files if f.startswith('ebay_products_') and f.endswith('.xlsx')]
+        excel_files = [f for f in files if f.startswith('Scotty Products_') and f.endswith('.xlsx')]
         
         latest_file = None
         latest_date = None
