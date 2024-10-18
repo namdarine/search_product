@@ -14,9 +14,7 @@ api_key_instance = get_API_key(key_file, 5)
 api_key = api_key_instance.get_api_key(5).strip()
 
 current_date = datetime.now().strftime("%Y-%m-%d")
-current_time = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.000Z")
-last_update_date = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%S.000Z")
-# print(last_update_date)
+last_update_date = (datetime.now() - timedelta(days=2)).strftime("%Y-%m-%dT%H:%M:%S.000Z")
 
 url = "https://svcs.ebay.com/services/search/FindingService/v1"
 
@@ -33,7 +31,7 @@ page_number = 1
 while True:
     params = {
             "keywords": "scotty cameron",
-            "paginationInput.entriesPerPage": "1",
+            "paginationInput.entriesPerPage": "100",
             "paginationInput.pageNumber": str(page_number),
             "itemFilter(0).name": "StartTimeFrom",  # 특정 시간 이후에 올라온 항목
             "itemFilter(0).value": last_update_date,
@@ -43,14 +41,15 @@ while True:
 
     if response.status_code == 200:
             data = json.loads(response.text)
-            items = data['findItemsByKeywordsResponse'][0]['searchResult'][0]['item']
+            items = data['findItemsByKeywordsResponse'][0]['searchResult'][0].get('item', [])
+            
             if not items:
                 break
             all_items.extend(items)
             page_number += 1
 
             # API 호출 제한 체크
-            if page_number > 5:
+            if page_number > 45:
                 break
     else:
         print(f"API 호출 실패. 상태 코드: {response.status_code}")
@@ -59,11 +58,12 @@ while True:
 product_list = []
 
 # 각 제품 정보 추출
-for item in items:
+for item in all_items:
     item_id = item['itemId'][0] if 'itemId' in item else "N/A"
     title = item['title'][0] if 'title' in item else "N/A"
     category = item['primaryCategory'][0]['categoryName'][0] if 'primaryCategory' in item else 'N/A'
     price = item['sellingStatus'][0]['currentPrice'][0]['__value__'] if 'sellingStatus' in item else "N/A"
+    price = f'$ {price}'
 
     end_time_str = item['listingInfo'][0]['endTime'][0] if 'listingInfo' in item else "N/A"
     end_time = datetime.strptime(end_time_str, "%Y-%m-%dT%H:%M:%S.%fZ") if end_time_str != "N/A" else "N/A"
@@ -71,6 +71,7 @@ for item in items:
 
     item_url = item['viewItemURL'][0] if 'viewItemURL' in item else "N/A"
     condition = item['condition'][0]['conditionDisplayName'][0] if 'condition' in item else "N/A"
+    location = item['location'][0] if 'location' in item else 'N/A'
     shipping = "N/A"
     if 'shippingInfo' in item and len(item['shippingInfo']) > 0:
         if 'shippingServiceCost' in item['shippingInfo'][0]:
@@ -91,6 +92,7 @@ for item in items:
         "경매 마감일": end_time,
         "제품 링크": item_url,
         "상태": condition,
+        "판매 국가": location,
         "배송비": shipping
     })
 
@@ -98,23 +100,27 @@ for item in items:
 #df['Status'] = '새로 추가'
 
 new_df = pd.DataFrame(product_list)
-new_df['Status'] = '새로 추가'
+print(new_df.columns)
+#new_df['Status'] = '새로 추가'
+new_df["상품 ID"] = new_df["상품 ID"]#.astype(str)
 
 latest_file = find_file.find_latest_file()
 latest_file = os.path.join('output', latest_file)
 if latest_file:
-        existing_df = pd.read_excel(latest_file)
+        existing_df = pd.read_excel(latest_file)#, dtype={"상품 ID": str})
         # 'Newly Added' 상태 제거 (값을 빈 문자열로 변경)
-        existing_df['Status'] = existing_df['Status'].replace('Newly Added', '')
+        existing_df['Status'] = existing_df['Status'].replace('새로 추가', '')
 
 current_time = datetime.now()
 existing_df = existing_df[existing_df['경매 마감일'] >= current_time.strftime("%Y-%m-%d %H:%M:%S")]
 
-new_products = new_df[~new_df['상품 ID'].isin(existing_df['상품 ID'])]
-new_products['Status'] = '새로 추가'
+new_products = new_df[~new_df["상품 ID"].isin(existing_df["상품 ID"])]
+if not new_products.empty:
+    new_products['Status'] = '새로 추가'
 
-updated_df = pd.concat([existing_df, new_products])
-
+new_products.to_excel('new_product.xlsx', index=False)
+updated_df = pd.concat([new_products, existing_df], ignore_index=True)
+updated_df.to_excel('updated file.xlsx', index=False)
 
 save_dir = './output'
 
@@ -151,6 +157,7 @@ for row in range(2, sheet.max_row + 1):  # 헤더는 제외하고 2번째 행부
 workbook.save(excel_file)
 
 
+'''
 updated_file = "output/Scotty Products_{current_date}.xlsx"
 json_file = "output/update_date.json"
 
@@ -168,4 +175,4 @@ subprocess.run(["git", "add", "."])
 subprocess.run(["git", "commit", "-m", "Update Excel file and JSON with current date"])
 subprocess.run(["git", "push"])
 
-
+'''
