@@ -14,7 +14,7 @@ api_key_instance = get_API_key(key_file, 5)
 api_key = api_key_instance.get_api_key(5).strip()
 
 current_date = datetime.now().strftime("%Y-%m-%d")
-last_update_date = (datetime.now() - timedelta(days=2)).strftime("%Y-%m-%dT%H:%M:%S.000Z")
+last_update_date = (datetime.now() - timedelta(days=3)).strftime("%Y-%m-%dT%H:%M:%S.000Z")
 
 url = "https://svcs.ebay.com/services/search/FindingService/v1"
 
@@ -100,14 +100,12 @@ for item in all_items:
 #df['Status'] = '새로 추가'
 
 new_df = pd.DataFrame(product_list)
-print(new_df.columns)
-#new_df['Status'] = '새로 추가'
-new_df["상품 ID"] = new_df["상품 ID"]#.astype(str)
+new_df["상품 ID"] = new_df["상품 ID"]
 
 latest_file = find_file.find_latest_file()
 latest_file = os.path.join('output', latest_file)
 if latest_file:
-        existing_df = pd.read_excel(latest_file)#, dtype={"상품 ID": str})
+        existing_df = pd.read_excel(latest_file)
         # 'Newly Added' 상태 제거 (값을 빈 문자열로 변경)
         existing_df['Status'] = existing_df['Status'].replace('새로 추가', '')
 
@@ -118,9 +116,7 @@ new_products = new_df[~new_df["상품 ID"].isin(existing_df["상품 ID"])]
 if not new_products.empty:
     new_products['Status'] = '새로 추가'
 
-new_products.to_excel('new_product.xlsx', index=False)
 updated_df = pd.concat([new_products, existing_df], ignore_index=True)
-updated_df.to_excel('updated file.xlsx', index=False)
 
 save_dir = './output'
 
@@ -156,8 +152,6 @@ for row in range(2, sheet.max_row + 1):  # 헤더는 제외하고 2번째 행부
 # 엑셀 파일 저장
 workbook.save(excel_file)
 
-
-'''
 updated_file = "output/Scotty Products_{current_date}.xlsx"
 json_file = "output/update_date.json"
 
@@ -170,9 +164,6 @@ with open(json_file, 'w') as jsonf:
 
 # 엑셀 파일 푸시하는 스크립트 예시
 subprocess.run(["git", "add", "."])
-#subprocess.run(["git", "add", updated_file])
-#subprocess.run(["git", "add", json_file])
 subprocess.run(["git", "commit", "-m", "Update Excel file and JSON with current date"])
 subprocess.run(["git", "push"])
 
-'''
