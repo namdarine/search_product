@@ -11,13 +11,12 @@
 
     <script>
         // JSON 파일에서 업데이트 날짜를 로드하는 함수
-        fetch('output/update_date.json')
+        fetch(`output/update_date.json?cachebuster=${new Date().getTime()}`)
             .then(response => response.json())
             .then(data => {
-                const updateDate = data.updateDate; // 업데이트 날짜 가져오기
+                const updateDate = data.updateDate;
                 const fileName = `Scotty Products_${updateDate}.xlsx`;
                 
-                // 다운로드 링크 설정
                 document.getElementById('downloadLink').innerHTML = `<a href="output/${fileName}" download>여기를 클릭하여 파일 다운로드하세요</a>`;
             })
             .catch(error => {
