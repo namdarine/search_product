@@ -17,7 +17,7 @@
                 const updateDate = data.updateDate;
                 const fileName = `Scotty Products_${updateDate}.xlsx`;
                 
-                document.getElementById('downloadLink').innerHTML = `<a href="output/${fileName}" download>여기를 클릭하여 파일 다운로드하세요</a>`;
+                document.getElementById('downloadLink').innerHTML = `<a href="output/${fileName}" download>${fileName} 파일 다운로드</a>`;
             })
             .catch(error => {
                 console.error('파일 정보를 가져오는 데 오류가 발생했습니다:', error);
