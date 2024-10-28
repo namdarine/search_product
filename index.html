@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Excel Files</title>
+</head>
+<body>
+    <h1>엑셀 파일 다운로드</h1>
+    <p id="downloadLink">파일 정보를 불러오는 중입니다...</p>
+
+    <script>
+        // JSON 파일에서 업데이트 날짜를 로드하는 함수
+        fetch(`output/update_date.json?cachebuster=${new Date().getTime()}`)
+            .then(response => response.json())
+            .then(data => {
+                const updateDate = data.updateDate;
+                const fileName = `Scotty Products_${updateDate}.xlsx`;
+                
+                document.getElementById('downloadLink').innerHTML = `<a href="output/${fileName}" download>${fileName} 파일 다운로드</a>`;
+            })
+            .catch(error => {
+                console.error('파일 정보를 가져오는 데 오류가 발생했습니다:', error);
+                document.getElementById('downloadLink').innerText = '파일 정보를 불러오지 못했습니다.';
+            });
+    </script>
+</body>
+</html>
