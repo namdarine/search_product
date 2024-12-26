@@ -14,7 +14,7 @@ api_key_instance = get_API_key(key_file, 5)
 api_key = api_key_instance.get_api_key(5).strip()
 
 current_date = datetime.now().strftime("%Y-%m-%d")
-last_update_date = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%dT%H:%M:%S.000Z")
+last_update_date = (datetime.now() - timedelta(days=24)).strftime("%Y-%m-%dT%H:%M:%S.000Z")
 
 url = "https://svcs.ebay.com/services/search/FindingService/v1"
 
